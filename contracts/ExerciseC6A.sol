@@ -10,12 +10,16 @@ contract ExerciseC6A {
     struct UserProfile {
         bool isRegistered;
         bool isAdmin;
+       
     }
 
     address private contractOwner;                  // Account used to deploy contract
     mapping(address => UserProfile) userProfiles;   // Mapping for storing user profiles
+    bool private operational = true;
+    uint constant M = 2;
+    address[] multiCalls = new address[](0);
 
-
+    
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -51,6 +55,19 @@ contract ExerciseC6A {
         _;
     }
 
+    /**
+    * @dev Modifier that requires the "ContractOwner" account to be the function caller
+    */
+    modifier requireIsOperational() 
+    {
+        require(operational, "Caller is not contract owner");
+        _;
+    }
+
+   
+
+
+
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -72,6 +89,33 @@ contract ExerciseC6A {
         return userProfiles[account].isRegistered;
     }
 
+/**
+    * @dev Sets contract operations on/off
+    *
+    * When operational mode is disabled, all write transactions except for this one will fail
+    */    
+    function setOperatingStatus
+                            (
+                                bool mode
+                            ) 
+                            external
+                            /** requireIsOperational  - lockout bug **/
+                            requireContractOwner 
+    {
+        operational = mode;
+    }
+
+    /**
+    * @dev Modifier that requires the "ContractOwner" account to be the function caller
+    */
+    function isOperational() 
+                            public 
+                            view 
+                            returns(bool) 
+    {
+        return operational;
+    }
+
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -82,7 +126,8 @@ contract ExerciseC6A {
                                     bool isAdmin
                                 )
                                 external
-                                requireContractOwner
+                                requireContractOwner 
+                                requireIsOperational
     {
         require(!userProfiles[account].isRegistered, "User is already registered.");
 
